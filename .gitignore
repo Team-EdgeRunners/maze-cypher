@@ -4,6 +4,7 @@
 .piolibdeps/
 .clangd/
 .cache/
+compile_commands.json
 
 # IDE Configuration
 .vscode

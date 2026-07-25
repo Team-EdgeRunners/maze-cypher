@@ -57,7 +57,7 @@ void setup() {
   Serial.println(F("Initializing BMI160 sensor over I2C..."));
 
   // Initialize BMI160 in I2C mode
-  if (!BMI160.begin(BMI160Gen::I2C_MODE, Wire, BMI160_I2C_ADDR)) {
+  if (!BMI160.begin(BMI160GenClass::I2C_MODE, BMI160_I2C_ADDR)) {
     Serial.println(F("[ERROR] BMI160 sensor initialization failed!"));
     Serial.println(F("Please check:"));
     Serial.println(F("  1. Wiring: VCC=3.3V, GND, SDA=PB7, SCL=PB6, CS=3.3V"));
@@ -73,11 +73,11 @@ void setup() {
 }
 
 void loop() {
-  int gx_raw, gy_raw, gz_raw;
-  int ax_raw, ay_raw, az_raw;
+  int16_t gx_raw, gy_raw, gz_raw;
+  int16_t ax_raw, ay_raw, az_raw;
 
   // Read 6-axis raw data
-  BMI160.readMotion6(ax_raw, ay_raw, az_raw, gx_raw, gy_raw, gz_raw);
+  BMI160.getMotion6(&ax_raw, &ay_raw, &az_raw, &gx_raw, &gy_raw, &gz_raw);
 
   // Convert raw readings to physical units (Default ranges: Accel +/-2g, Gyro +/-250 deg/s)
   float ax = ax_raw / 16384.0f;
