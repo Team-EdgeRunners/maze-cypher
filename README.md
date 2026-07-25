@@ -93,4 +93,4 @@ The project includes pre-configured environments inside [`platformio.ini`](platf
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Feel free to use and adapt for your robotics projects!
