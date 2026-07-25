@@ -74,7 +74,7 @@ volatile int32_t encoderCountB = 0;
 const float ENCODER_PPR = 210.0f; // Example: 7 PPR * 30:1 gear ratio = 210 pulses/rev
 
 // Interrupt Service Routine (ISR) for Motor A Encoder
-void IRAM_ATTR isr_encoderA() {
+void isr_encoderA() {
   if (digitalRead(ENC_A_PHASE_B) == HIGH) {
     encoderCountA++;
   } else {
@@ -83,7 +83,7 @@ void IRAM_ATTR isr_encoderA() {
 }
 
 // Interrupt Service Routine (ISR) for Motor B Encoder
-void IRAM_ATTR isr_encoderB() {
+void isr_encoderB() {
   if (digitalRead(ENC_B_PHASE_B) == HIGH) {
     encoderCountB++;
   } else {
