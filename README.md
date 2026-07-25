@@ -28,66 +28,69 @@ maze-cypher/
 
 ## ⚡ Master Hardware Pinout Reference (STM32F103C8T6)
 
-All hardware modules in this repository are assigned dedicated STM32 pins without pin conflicts:
-
 | Module | Module Pin | STM32 Pin | Function / Protocol |
 | :--- | :--- | :--- | :--- |
-| **VL53L0XV2 TOF** | SDA | **PB7** | I2C1_SDA (Default Addr: `0x29`) |
+| **VL53L0XV2 TOF** | SDA | **PB7** | I2C1_SDA (Addr: `0x29`) |
 | | SCL | **PB6** | I2C1_SCL |
-| | XSHUT | **PA4** | Optional Reset Pin |
-| | VCC / GND | 3.3V / GND | Power |
-| **BMI160 IMU** | SDA | **PB7** | I2C1_SDA (Default Addr: `0x68`) |
+| | XSHUT | **PA4** | Optional Reset |
+| | VCC/GND | 3.3V/GND | Power |
+| **BMI160 IMU** | SDA | **PB7** | I2C1_SDA (Addr: `0x68`) |
 | | SCL | **PB6** | I2C1_SCL |
-| | SA0 / CS | GND / 3.3V | Address Config / I2C Mode Select |
-| | VCC / GND | 3.3V / GND | Power |
-| **0.96" SPI OLED** | D0 / CLK | **PA5** | SPI1_SCK |
-| | D1 / DIN | **PA7** | SPI1_MOSI |
-| | RES / RST | **PA2** | OLED Reset |
-| | DC / D/C | **PA3** | Data / Command Control |
+| | SA0/CS | GND/3.3V | Addr Config / I2C Mode |
+| | VCC/GND | 3.3V/GND | Power |
+| **0.96" SPI OLED** | D0/CLK | **PA5** | SPI1_SCK |
+| | D1/DIN | **PA7** | SPI1_MOSI |
+| | RES/RST | **PA2** | Reset |
+| | DC/D/C | **PA3** | Data/Command |
 | | CS | **PA4** | Chip Select |
-| | VCC / GND | 3.3V / GND | Power |
-| **L298N Driver** | ENA | **PA8** | Left Motor PWM (TIM1_CH1) |
-| | IN1 / IN2 | **PB12 / PB13** | Left Motor Direction |
-| | ENB | **PA11** | Right Motor PWM (TIM1_CH4) |
-| | IN3 / IN4 | **PB14 / PB15** | Right Motor Direction |
-| | VMS / GND | Batt / GND | Motor Power & Common GND |
-| **N20 Encoders** | Motor A Out A/B | **PB0 / PB1** | Left Encoder Interrupt (EXTI0) / Phase B |
-| | Motor B Out A/B | **PB10 / PB11** | Right Encoder Interrupt (EXTI10) / Phase B |
-| | VCC / GND | 3.3V / GND | Encoder Logic Power |
+| | VCC/GND | 3.3V/GND | Power |
+| **L298N Driver** | ENA | **PA8** | Left Motor PWM |
+| | IN1/IN2 | **PB12/PB13** | Left Motor Dir |
+| | ENB | **PA11** | Right Motor PWM |
+| | IN3/IN4 | **PB14/PB15** | Right Motor Dir |
+| | VMS/GND | Batt/GND | Motor Power |
+| **N20 Encoders** | A Out A/B | **PB0/PB1** | Left Encoder |
+| | B Out A/B | **PB10/PB11** | Right Encoder |
+| | VCC/GND | 3.3V/GND | Power |
 
 ---
 
 ## 🛠️ PlatformIO Environments
 
-The project includes pre-configured environments inside [`platformio.ini`](platformio.ini):
-
-| Environment Name | Description | Source File | Automatic Dependencies |
+| Environment Name | Description | Source File | Dependencies |
 | :--- | :--- | :--- | :--- |
 | `[env:vl53l0x_test]` | VL53L0XV2 Distance Sensor Test | `Test/VL53L0X/main.cpp` | `adafruit/Adafruit VL53L0X` |
-| `[env:bmi160_test]` | BMI160 6-Axis Gyro + Accel Test | `Test/BMI160/main.cpp` | `emotitron/BMI160-Arduino` |
-| `[env:oled_spi_test]` | 0.96" SPI Yellow-Blue OLED Test | `Test/OLED_SPI/main.cpp` | `Adafruit SSD1306`, `Adafruit GFX` |
-| `[env:l298n_motors_test]`| L298N + 2x N20 Encoder Motors Test | `Test/L298N_Motors/main.cpp`| *None* |
-| `[env:i2c_scanner]` | I2C Device Address Scanner | `Test/I2C_Scanner/main.cpp`| *None* |
+| `[env:bmi160_test]` | BMI160 Gyro + Accel Test | `Test/BMI160/main.cpp` | `emotitron/BMI160-Arduino` |
+| `[env:oled_spi_test]` | SPI OLED Display Test | `Test/OLED_SPI/main.cpp` | `Adafruit SSD1306`, `Adafruit GFX` |
+| `[env:l298n_motors_test]` | L298N Motor Driver Test | `Test/L298N_Motors/main.cpp` | *None* |
+| `[env:i2c_scanner]` | I2C Scanner Utility | `Test/I2C_Scanner/main.cpp` | *None* |
+| `[env:bluepill_blink]` | STM32 Blue Pill Test, LED Blink | `Test/BLUEPILL_TEST/main.cpp` | *None* |
 
 ---
 
 ## 🚀 Getting Started with PlatformIO
 
 ### Prerequisites
-1. **VS Code** with the **PlatformIO IDE** extension installed.
-2. **ST-Link V2 Programmer** (or USB Serial / DFU) connected to your STM32 board.
+1. **VS Code** with the **PlatformIO IDE** extension.
+2. Programmer options:
+   - **ST-Link V2** (`upload_protocol = stlink`)
+   - **USB-to-TTL Adapter** (`upload_protocol = serial`, `upload_port = COM17`)
 
-### Building & Flashing
+### Uploading with ST-Link
+- Connect SWDIO=PA13, SWCLK=PA14, GND, 3.3V.
+- Select environment → **Upload**.
 
-1. Clone or open the repository in VS Code:
-   ```bash
-   code .
-   ```
-2. Open the **PlatformIO** extension tab on the left sidebar.
-3. Under **PROJECT TASKS**, expand the test environment you wish to run (e.g. `env:vl53l0x_test` or `env:l298n_motors_test`).
-4. Click **Build** to compile the code.
-5. Click **Upload** to flash the binary to your STM32 board via ST-Link.
-6. Click **Serial Monitor** at `115200` baud to view real-time debug output.
+### Uploading with USB-to-TTL
+- Wiring: TX→PA10, RX→PA9, GND→GND, VCC→3.3V.
+- Set BOOT0=1, BOOT1=0, press Reset.
+- Select environment → **Upload**.
+- After upload: set BOOT0=0, press Reset to run program.
+
+### Build & Flash
+```bash
+pio run -t upload -e vl53l0x_test
+```
+Use **Serial Monitor** at `115200` baud for debug output.
 
 ---
 
