@@ -1,0 +1,28 @@
+# PlatformIO build artifacts & cache
+.pio/
+.pioenvs/
+.piolibdeps/
+.clangd/
+.cache/
+
+# IDE Configuration
+.vscode
+
+# Compiled Binaries & Build outputs
+*.bin
+*.elf
+*.hex
+*.map
+*.o
+*.d
+*.su
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+
+# Backup & Temporary files
+*.bak
+*.tmp
+*~
