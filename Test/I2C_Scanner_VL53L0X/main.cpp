@@ -1,142 +1,121 @@
 /*
   ================================================================================
-  COMBINED TEST: I2C Scanner + VL53L0X Distance Sensor
-  PLATFORM: STM32 (e.g. STM32F103C8T6 Blue Pill)
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  STM32 Blue Pill + CJVL53L0XV2 (VL53L0X) Distance Sensor
+  I2C Scanner + Continuous Ranging with Live Mode Selection
+  Library: Pololu VL53L0X
+  Platform: PlatformIO (Arduino Framework for STM32)
   ================================================================================
 
-  [1] PLATFORMIO CONFIGURATION (platformio.ini):
-  ---------------------------------------------
-  Environment: [env:i2c_vl53l0x_test]
-  Platform: ststm32
-  Board: bluepill_f103c8 (Or update platformio.ini to match your board)
-  Framework: arduino
+  [platformio.ini]
+  ----------------
+  [env:i2c_vl53l0x_test]
+  platform = ststm32
+  board = bluepill_f103c8
+  framework = arduino
+  lib_deps =
+      pololu/VL53L0X
+  monitor_speed = 115200
 
-  Libraries (Automatic Download via platformio.ini):
-  - adafruit/Adafruit VL53L0X @ ^1.2.4
-
-  [2] HARDWARE WIRING:
-  --------------------
-  +------------------+----------------------------------+
-  | Sensor/Device    | STM32 Board Pin                  |
-  +------------------+----------------------------------+
-  | VCC              | 3.3V                             |
-  | GND              | GND                              |
-  | SDA              | PB7 (I2C1_SDA)                   |
-  | SCL              | PB6 (I2C1_SCL)                   |
-  | XSHUT (Optional) | PA4 (Shutdown / Enable Control)  |
-  +------------------+----------------------------------+
-  * NOTE: Connect 4.7k ohm pull-up resistors from SDA -> 3.3V and SCL -> 3.3V
-    if your TOF breakout board lacks built-in pull-ups.
-
+  [Wiring]
+  --------
+  VCC   -> 3.3V
+  GND   -> GND
+  SDA   -> PB7 (I2C1_SDA)
+  SCL   -> PB6 (I2C1_SCL)
+  XSHUT -> tied HIGH (3.3V)
+  GPIO1 -> optional
   ================================================================================
 */
 
-#include <Adafruit_VL53L0X.h>
-#include <Arduino.h>
 #include <Wire.h>
+#include <VL53L0X.h>
 
-// STM32 I2C1 Default Pins & Control
-#define SDA_PIN PB7
-#define SCL_PIN PB6
-#define XSHUT_PIN PA4 // Optional hardware reset pin
+VL53L0X sensor;
+bool vl53l0xInitialized = false;
 
-// Create VL53L0X sensor instance
-Adafruit_VL53L0X lox = Adafruit_VL53L0X();
-
-// Function prototype
 bool scanI2CBus(bool lookForVL53L0X = true);
 
-bool vl53l0xInitialized = false;
-unsigned long lastScanTime = 0;
-const unsigned long RESCAN_INTERVAL = 10000; // Rescan I2C bus every 10 seconds
-
 void setup() {
-  // Initialize Serial output (115200 Baud)
   Serial.begin(115200);
-  while (!Serial && millis() < 3000)
-    ; // Wait up to 3 sec for Serial Monitor
+  while (!Serial && millis() < 3000);
 
-  Serial.println(F("\n==========================================="));
-  Serial.println(F("  STM32 I2C Scanner + VL53L0X Test Suite   "));
-  Serial.println(F("==========================================="));
+  Serial.println("\n===========================================");
+  Serial.println("  STM32 I2C Scanner + VL53L0X Live Modes   ");
+  Serial.println("===========================================");
 
-  // Pulse XSHUT pin to reset sensor hardware (if wired)
-  pinMode(XSHUT_PIN, OUTPUT);
-  digitalWrite(XSHUT_PIN, LOW);
-  delay(10);
-  digitalWrite(XSHUT_PIN, HIGH);
-  delay(10);
-
-  // Configure STM32 I2C Pins
-  Wire.setSDA(SDA_PIN);
-  Wire.setSCL(SCL_PIN);
+  Wire.setSDA(PB7);
+  Wire.setSCL(PB6);
   Wire.begin();
+  Wire.setClock(100000);
 
-  // Run initial I2C bus scan
   bool foundLox = scanI2CBus(true);
 
   if (foundLox) {
-    Serial.println(
-        F("\nAttempting VL53L0X Sensor Initialization (Address 0x29)..."));
-    if (lox.begin(0x29)) {
+    Serial.println("\nAttempting VL53L0X Initialization...");
+    if (sensor.init()) {
       vl53l0xInitialized = true;
-      Serial.println(F("[SUCCESS] VL53L0X sensor initialized successfully!"));
-      Serial.println(F("Streaming distance measurements...\n"));
+      sensor.setTimeout(500);
+
+      // Default: long-range mode
+      sensor.setMeasurementTimingBudget(200000); // 200 ms
+      sensor.startContinuous();
+
+      Serial.println("[SUCCESS] VL53L0X initialized in continuous mode!");
+      Serial.println("Type 'f' for fast mode, 'l' for long-range mode, 's' for single-shot.");
     } else {
-      Serial.println(F("[ERROR] VL53L0X detected on I2C bus (0x29), but "
-                       "initialization failed!"));
-      Serial.println(F("Please check power supply stability and wiring."));
-    }
-  } else {
-    Serial.println(
-        F("\n[WARNING] VL53L0X (0x29) was NOT detected during I2C bus scan."));
-    Serial.println(F("Attempting direct initialization fallback..."));
-    if (lox.begin(0x29)) {
-      vl53l0xInitialized = true;
-      Serial.println(F("[SUCCESS] VL53L0X initialized on fallback check!"));
-    } else {
-      Serial.println(F("[ERROR] VL53L0X initialization failed. Verify SDA/SCL "
-                       "connections."));
+      Serial.println("[ERROR] VL53L0X detected but init failed!");
     }
   }
 }
 
 void loop() {
-  // Periodically perform full I2C bus scan
-  if (millis() - lastScanTime >= RESCAN_INTERVAL) {
-    lastScanTime = millis();
-    Serial.println(F("\n--- Periodic I2C Bus Rescan ---"));
-    scanI2CBus(false);
-    Serial.println(F("-------------------------------\n"));
+  // Check for user input
+  if (Serial.available()) {
+    char cmd = Serial.read();
+    if (cmd == 'f') {
+      sensor.setMeasurementTimingBudget(20000); // fast mode ~20 ms
+      Serial.println("[MODE] Fast mode selected (short range, quick updates).");
+    } else if (cmd == 'l') {
+      sensor.setMeasurementTimingBudget(200000); // long mode ~200 ms
+      Serial.println("[MODE] Long-range mode selected (slower, more reliable).");
+    } else if (cmd == 's') {
+      uint16_t distance = sensor.readRangeSingleMillimeters();
+      if (sensor.timeoutOccurred() || distance == 65535) {
+        Serial.println("[VL53L0X] Single-shot invalid measurement.");
+      } else {
+        Serial.print("[VL53L0X] Single-shot Distance: ");
+        Serial.print(distance);
+        Serial.println(" mm");
+      }
+    }
   }
 
-  // Read distance measurement if VL53L0X is initialized
   if (vl53l0xInitialized) {
-    VL53L0X_RangingMeasurementData_t measure;
-    lox.rangingTest(&measure, false); // Pass 'true' for raw debug log output
+    uint16_t distance = sensor.readRangeContinuousMillimeters();
 
-    if (measure.RangeStatus != 4) { // Status 4 = out of range / phase error
-      uint16_t dist_mm = measure.RangeMilliMeter;
-      float dist_cm = dist_mm / 10.0f;
-
-      Serial.print(F("[VL53L0X] Distance: "));
-      Serial.print(dist_mm);
-      Serial.print(F(" mm  |  "));
-      Serial.print(dist_cm, 1);
-      Serial.println(F(" cm"));
+    if (sensor.timeoutOccurred()) {
+      Serial.println("[VL53L0X] Timeout occurred!");
+    } else if (distance == 65535) {
+      Serial.println("[VL53L0X] Invalid measurement (no target, too close, or out of range).");
     } else {
-      Serial.println(F("[VL53L0X] Out of range / Signal too weak"));
+      Serial.print("[VL53L0X] Distance: ");
+      Serial.print(distance);
+      Serial.print(" mm  |  ");
+      Serial.print(distance / 10.0f, 1);
+      Serial.println(" cm");
     }
   } else {
-    Serial.println(F("[VL53L0X] Sensor offline. Retrying initialization..."));
-    if (lox.begin(0x29)) {
+    Serial.println("[VL53L0X] Sensor offline. Retrying init...");
+    if (sensor.init()) {
       vl53l0xInitialized = true;
-      Serial.println(F("[SUCCESS] VL53L0X re-initialized successfully!"));
+      sensor.setTimeout(500);
+      sensor.setMeasurementTimingBudget(200000);
+      sensor.startContinuous();
+      Serial.println("[SUCCESS] VL53L0X re-initialized successfully!");
     }
   }
 
-  delay(500); // Sampling interval (2Hz)
+  delay(200);
 }
 
 bool scanI2CBus(bool lookForVL53L0X) {
@@ -144,41 +123,30 @@ bool scanI2CBus(bool lookForVL53L0X) {
   int nDevices = 0;
   bool vl53l0xFound = false;
 
-  Serial.println(F("Scanning I2C bus (Addresses 0x01 - 0x7F)..."));
+  Serial.println("Scanning I2C bus (0x01 - 0x7F)...");
 
   for (address = 1; address < 127; address++) {
     Wire.beginTransmission(address);
     error = Wire.endTransmission();
 
     if (error == 0) {
-      Serial.print(F(" -> Device found at address 0x"));
-      if (address < 16)
-        Serial.print(F("0"));
+      Serial.print(" -> Device found at 0x");
+      if (address < 16) Serial.print("0");
       Serial.print(address, HEX);
 
       if (address == 0x29) {
-        Serial.print(F("  *** [VL53L0X TOF Sensor] ***"));
+        Serial.print("  *** [VL53L0X TOF Sensor] ***");
         vl53l0xFound = true;
-      } else if (address == 0x68 || address == 0x69) {
-        Serial.print(F("  [IMU Sensor - e.g. MPU6050 / BMI160]"));
-      } else if (address == 0x3C || address == 0x3D) {
-        Serial.print(F("  [OLED Display]"));
       }
       Serial.println();
       nDevices++;
-    } else if (error == 4) {
-      Serial.print(F(" -> Unknown error at address 0x"));
-      if (address < 16)
-        Serial.print(F("0"));
-      Serial.println(address, HEX);
     }
   }
 
   if (nDevices == 0) {
-    Serial.println(F("No I2C devices found! Check SDA (PB7), SCL (PB6), 3.3V, "
-                     "GND, & 4.7k pull-ups."));
+    Serial.println("No I2C devices found!");
   } else {
-    Serial.print(F("Scan finished. Total devices found: "));
+    Serial.print("Scan finished. Devices found: ");
     Serial.println(nDevices);
   }
 
