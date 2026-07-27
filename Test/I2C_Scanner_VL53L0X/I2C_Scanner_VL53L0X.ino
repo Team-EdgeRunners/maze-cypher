@@ -2,14 +2,14 @@
   ================================================================================
   COMBINED TEST: I2C Scanner + VL53L0X Distance Sensor
   PLATFORM: STM32 (e.g. STM32F103C8T6 Blue Pill)
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  ENVIRONMENT: PlatformIO (VS Code Extension) / Arduino IDE
   ================================================================================
 
   [1] PLATFORMIO CONFIGURATION (platformio.ini):
   ---------------------------------------------
   Environment: [env:i2c_vl53l0x_test]
   Platform: ststm32
-  Board: bluepill_f103c8 (Or update platformio.ini to match your board)
+  Board: bluepill_f103c8
   Framework: arduino
 
   Libraries (Automatic Download via platformio.ini):
@@ -20,7 +20,7 @@
   +------------------+----------------------------------+
   | Sensor/Device    | STM32 Board Pin                  |
   +------------------+----------------------------------+
-  | VCC              | 3.3V                             |
+  | VCC              | 3.3V (or 5V if module has 3.3V LDO)|
   | GND              | GND                              |
   | SDA              | PB7 (I2C1_SDA)                   |
   | SCL              | PB6 (I2C1_SCL)                   |
@@ -44,62 +44,57 @@
 // Create VL53L0X sensor instance
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 
-// Function prototype
+// Function prototypes
 bool scanI2CBus(bool lookForVL53L0X = true);
+void resetI2CBus();
 
 bool vl53l0xInitialized = false;
 unsigned long lastScanTime = 0;
-const unsigned long RESCAN_INTERVAL = 10000; // Rescan I2C bus every 10 seconds
+const unsigned long RESCAN_INTERVAL = 15000; // Rescan I2C bus every 15 seconds
 
 void setup() {
   // Initialize Serial output (115200 Baud)
   Serial.begin(115200);
-  while (!Serial && millis() < 3000)
-    ; // Wait up to 3 sec for Serial Monitor
+  while (!Serial && millis() < 3000); // Wait up to 3 sec for Serial Monitor
 
   Serial.println(F("\n==========================================="));
   Serial.println(F("  STM32 I2C Scanner + VL53L0X Test Suite   "));
   Serial.println(F("==========================================="));
 
-  // Pulse XSHUT pin to reset sensor hardware (if wired)
+  // Step 1: Hardware reset of VL53L0X via XSHUT pin (PA4) if connected
   pinMode(XSHUT_PIN, OUTPUT);
   digitalWrite(XSHUT_PIN, LOW);
-  delay(10);
+  delay(20);
   digitalWrite(XSHUT_PIN, HIGH);
-  delay(10);
+  delay(50); // Allow 50ms for VL53L0X internal MCU to boot
 
-  // Configure STM32 I2C Pins
+  // Step 2: I2C Bus Recovery (Clear any stuck SDA low states)
+  resetI2CBus();
+
+  // Step 3: Configure STM32 I2C Pins
   Wire.setSDA(SDA_PIN);
   Wire.setSCL(SCL_PIN);
   Wire.begin();
+  delay(50);
 
-  // Run initial I2C bus scan
-  bool foundLox = scanI2CBus(true);
-
-  if (foundLox) {
-    Serial.println(
-        F("\nAttempting VL53L0X Sensor Initialization (Address 0x29)..."));
-    if (lox.begin(0x29)) {
-      vl53l0xInitialized = true;
-      Serial.println(F("[SUCCESS] VL53L0X sensor initialized successfully!"));
-      Serial.println(F("Streaming distance measurements...\n"));
-    } else {
-      Serial.println(F("[ERROR] VL53L0X detected on I2C bus (0x29), but "
-                       "initialization failed!"));
-      Serial.println(F("Please check power supply stability and wiring."));
-    }
+  // Step 4: Direct Sensor Initialization
+  Serial.println(F("Attempting VL53L0X Sensor Initialization (Address 0x29)..."));
+  if (lox.begin(0x29)) {
+    vl53l0xInitialized = true;
+    Serial.println(F("[SUCCESS] VL53L0X sensor initialized successfully!"));
+    Serial.println(F("Streaming distance measurements...\n"));
   } else {
-    Serial.println(
-        F("\n[WARNING] VL53L0X (0x29) was NOT detected during I2C bus scan."));
-    Serial.println(F("Attempting direct initialization fallback..."));
-    if (lox.begin(0x29)) {
-      vl53l0xInitialized = true;
-      Serial.println(F("[SUCCESS] VL53L0X initialized on fallback check!"));
-    } else {
-      Serial.println(F("[ERROR] VL53L0X initialization failed. Verify SDA/SCL "
-                       "connections."));
-    }
+    Serial.println(F("[ERROR] VL53L0X initialization failed at 0x29!"));
+    Serial.println(F("Troubleshooting Checklist:"));
+    Serial.println(F("  1. Verify VCC -> 3.3V (or 5V if module has onboard 3.3V regulator)."));
+    Serial.println(F("  2. Verify GND -> GND (Common ground with STM32)."));
+    Serial.println(F("  3. Verify SDA -> PB7 and SCL -> PB6."));
+    Serial.println(F("  4. If XSHUT is wired to PA4, try disconnecting PA4 or wiring XSHUT to 3.3V."));
+    Serial.println(F("  5. Add 4.7k ohm pull-up resistors on SDA and SCL to 3.3V."));
   }
+
+  // Step 5: Run initial I2C bus scan
+  scanI2CBus(true);
 }
 
 void loop() {
@@ -130,6 +125,7 @@ void loop() {
     }
   } else {
     Serial.println(F("[VL53L0X] Sensor offline. Retrying initialization..."));
+    delay(1000);
     if (lox.begin(0x29)) {
       vl53l0xInitialized = true;
       Serial.println(F("[SUCCESS] VL53L0X re-initialized successfully!"));
@@ -137,6 +133,20 @@ void loop() {
   }
 
   delay(500); // Sampling interval (2Hz)
+}
+
+// Clears I2C bus lockups by sending 9 SCL clock pulses
+void resetI2CBus() {
+  pinMode(SDA_PIN, INPUT_PULLUP);
+  pinMode(SCL_PIN, OUTPUT);
+  for (int i = 0; i < 9; i++) {
+    digitalWrite(SCL_PIN, LOW);
+    delayMicroseconds(5);
+    digitalWrite(SCL_PIN, HIGH);
+    delayMicroseconds(5);
+  }
+  pinMode(SDA_PIN, INPUT);
+  pinMode(SCL_PIN, INPUT);
 }
 
 bool scanI2CBus(bool lookForVL53L0X) {

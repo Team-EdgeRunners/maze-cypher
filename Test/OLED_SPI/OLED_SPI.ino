@@ -2,7 +2,7 @@
   ================================================================================
   MODULE: 0.96" 128x64 SPI OLED Display (Yellow & Blue Bicolor SSD1306)
   PLATFORM: STM32 (e.g. STM32F103C8T6 Blue Pill)
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  ENVIRONMENT: PlatformIO (VS Code Extension) / Arduino IDE
   INTERFACE: 4-Wire Hardware SPI Mode
   ================================================================================
   
@@ -56,8 +56,6 @@
 
 // Create SSD1306 display instance using Hardware SPI
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &SPI, OLED_DC, OLED_RESET, OLED_CS);
-
-void drawTestPattern();
 
 void setup() {
   Serial.begin(115200);

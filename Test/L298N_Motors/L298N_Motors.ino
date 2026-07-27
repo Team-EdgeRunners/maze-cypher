@@ -2,7 +2,7 @@
   ================================================================================
   MODULE: L298N Dual H-Bridge Motor Driver + 2x N20 Hall Sensor Encoder Motors
   PLATFORM: STM32 (e.g. STM32F103C8T6 Blue Pill)
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  ENVIRONMENT: PlatformIO (VS Code Extension) / Arduino IDE
   ================================================================================
   
   [1] PLATFORMIO CONFIGURATION (platformio.ini):

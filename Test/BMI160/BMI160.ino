@@ -2,7 +2,7 @@
   ================================================================================
   MODULE: BMI160 6-Axis / 6DOF Gyro & Accelerometer Module
   PLATFORM: STM32 (e.g. STM32F103C8T6 Blue Pill)
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  ENVIRONMENT: PlatformIO (VS Code Extension) / Arduino IDE
   INTERFACE: I2C (IIC) Mode
   ================================================================================
   

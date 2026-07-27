@@ -13,15 +13,19 @@ maze-cypher/
 ├── README.md                   # Project documentation & wiring reference
 └── Test/                       # Modular hardware test sketches
     ├── VL53L0X/                # VL53L0XV2 TOF Distance Sensor Test
-    │   └── main.cpp
+    │   └── VL53L0X.ino
     ├── BMI160/                 # BMI160 6-DOF IMU (Gyro + Accelerometer) Test
-    │   └── main.cpp
+    │   └── BMI160.ino
     ├── OLED_SPI/               # 0.96" 128x64 Bicolor SPI OLED Display Test
-    │   └── main.cpp
+    │   └── OLED_SPI.ino
     ├── L298N_Motors/           # L298N Motor Driver + Dual N20 Hall Encoder Test
-    │   └── main.cpp
-    └── I2C_Scanner/            # I2C Bus Address Scanner Utility
-        └── main.cpp
+    │   └── L298N_Motors.ino
+    ├── I2C_Scanner/            # I2C Bus Address Scanner Utility
+    │   └── I2C_Scanner.ino
+    ├── I2C_Scanner_VL53L0X/    # I2C Scanner & VL53L0X TOF Sensor Test
+    │   └── I2C_Scanner_VL53L0X.ino
+    └── BLUEPILL_TEST/          # STM32 Blue Pill Blink Test
+        └── BLUEPILL_TEST.ino
 ```
 
 ---
@@ -59,12 +63,12 @@ maze-cypher/
 
 | Environment Name | Description | Source File | Dependencies |
 | :--- | :--- | :--- | :--- |
-| `[env:vl53l0x_test]` | VL53L0XV2 Distance Sensor Test | `Test/VL53L0X/main.cpp` | `adafruit/Adafruit VL53L0X` |
-| `[env:bmi160_test]` | BMI160 Gyro + Accel Test | `Test/BMI160/main.cpp` | `emotitron/BMI160-Arduino` |
-| `[env:oled_spi_test]` | SPI OLED Display Test | `Test/OLED_SPI/main.cpp` | `Adafruit SSD1306`, `Adafruit GFX` |
-| `[env:l298n_motors_test]` | L298N Motor Driver Test | `Test/L298N_Motors/main.cpp` | *None* |
-| `[env:i2c_scanner]` | I2C Scanner Utility | `Test/I2C_Scanner/main.cpp` | *None* |
-| `[env:bluepill_blink]` | STM32 Blue Pill Test, LED Blink | `Test/BLUEPILL_TEST/main.cpp` | *None* |
+| `[env:vl53l0x_test]` | VL53L0XV2 Distance Sensor Test | `Test/VL53L0X/VL53L0X.ino` | `adafruit/Adafruit VL53L0X` |
+| `[env:bmi160_test]` | BMI160 Gyro + Accel Test | `Test/BMI160/BMI160.ino` | `emotitron/BMI160-Arduino` |
+| `[env:oled_spi_test]` | SPI OLED Display Test | `Test/OLED_SPI/OLED_SPI.ino` | `Adafruit SSD1306`, `Adafruit GFX` |
+| `[env:l298n_motors_test]` | L298N Motor Driver Test | `Test/L298N_Motors/L298N_Motors.ino` | *None* |
+| `[env:i2c_scanner]` | I2C Scanner Utility | `Test/I2C_Scanner/I2C_Scanner.ino` | *None* |
+| `[env:bluepill_blink]` | STM32 Blue Pill Test, LED Blink | `Test/BLUEPILL_TEST/BLUEPILL_TEST.ino` | *None* |
 
 ---
 

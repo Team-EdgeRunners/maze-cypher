@@ -1,7 +1,7 @@
 /*
   ================================================================================
   UTILITY: I2C Bus Scanner for STM32
-  ENVIRONMENT: PlatformIO (VS Code Extension)
+  ENVIRONMENT: PlatformIO (VS Code Extension) / Arduino IDE
   ================================================================================
   
   [1] PLATFORMIO CONFIGURATION (platformio.ini):
