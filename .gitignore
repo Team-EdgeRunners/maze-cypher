@@ -1,11 +1,3 @@
-# PlatformIO build artifacts & cache
-.pio/
-.pioenvs/
-.piolibdeps/
-.clangd/
-.cache/
-compile_commands.json
-
 # IDE Configuration
 .vscode
 
